@@ -8,7 +8,7 @@ format:
 toc: true
 ---
 
-## 0 - Setup
+## 0 - Setup: SUPPRESS WARNINGS!!
 
 ```{r setup}
 if(!require(pacman))
@@ -24,7 +24,8 @@ pacman::p_load(tidyverse,
                openintro,
                ggrepel,
                patchwork,
-               quantreg)
+               quantreg,
+               extrafont)
 
 devtools::install_github("tidyverse/dsbox")
 
@@ -409,4 +410,41 @@ summary(model) # Source: Thieme 2021 (Towards Data Science)
 
 When examining credit card utilization instead of credit balance, student and marital status seem to have a much stronger impact on the relationship between income and utilization. Most interesting, students' credit utilization decreases as income increases. When examining marital status, single people are more likely to demonstrate more extreme changes to utilization as income increases (both positively and negatively, depending on student status), while married people are more constant in their utilization by income.
 
-## 5 - Napoleon’s march.
+## 5 - Napoleon’s march
+
+```{r q5}
+
+# load data
+napoleon <- read_rds("data/napoleon.rds")
+
+troops <- napoleon$troops
+cities <- napoleon$cities
+temps  <- napoleon$temperatures
+
+# glimpse data
+troops |>
+  glimpse()
+
+windowsFonts()
+font_import()
+loadfonts(device = "win")
+
+# plot
+
+cities |>
+ggplot(aes(x = long, y = lat)) + 
+  geom_path(
+    aes(size = survivors, colour = direction, group = group), 
+    data = troops
+  ) + 
+  geom_point() + 
+  geom_text(aes(label = city), hjust=1, vjust=1, size=3) + 
+  scale_colour_manual(values = c("bisque2","black")) +
+  scale_x_continuous(limits = c(24, 39)) +
+  theme_void()+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        text = element_text(size = 10),
+        legend.position= "none") 
+
+```
