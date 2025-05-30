@@ -299,21 +299,87 @@ credit <- read_csv("data/credit.csv")
 credit |>
   glimpse()
 
+# data wrangle: add identifying prefix to all obs in student and married vars (probably not the most elegant solution)
+credit$student = paste0('student: ', credit$student)
+credit$married = paste0('married: ', credit$married) # Source: csgillespie 2014 (StackOverflow)
+
+credit |>
+  glimpse()
+
 # plot
 credit |>
-  ggplot(aes(x = income, y = balance, color = student, shape = student)) +
-  geom_point() +
-  facet_grid(rows = vars(student), cols = vars(married), labeller(label_parsed())) +
+  ggplot(aes(x = income, 
+             y = balance, 
+             color = student, 
+             shape = student)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_grid(student ~ married) +
   labs(
     x = "Income",
     y = "Credit card balance"
   ) +
-  geom_smooth(method = "lm", se = FALSE) +
   scale_y_continuous(labels = label_dollar()) +
   scale_x_continuous(labels = label_dollar(suffix = "K")) +
-  theme(legend.position= "none") # Source: Andrew 2021 (StackOverflow)
-
+  theme_minimal() +
+  theme(legend.position= "none", 
+        panel.border = element_rect(color = "black", fill = NA, size = 0.05),
+        strip.background = element_rect(color = "black", fill = "lightgray", size = 1)) # Source: Andrew 2021 (StackOverflow), Emman 2021 (StackOverflow)
 
 ```
+
+The above plot reveals moderate positive relationships between income and credit card balances regardless of student or marital status. The relationship between these two variables does not vary much (visually, at least; examining the actual OLS models might reveal other findings) by student or marital status, with the possible exception of a greater slope of the OLS model of unmarried students, suggesting greater credit card balance for their income level.
+
+```{r q4-part_b}
+
+# run OLS model
+model <- lm(balance ~ income + student + married, data = credit)
+summary(model) # Source: Thieme 2021 (Towards Data Science)
+```
+
+The above model indicates that student status is a statistically significant predictor of credit card balance, while marital status is not. Using solely the plots created in part A, I would not have expected student to be statistically significant as to me there does not seem to be too much visual variation between students and non-students.
+
+```{r q4-part_c}
+
+# glimpse cols
+credit |>
+  glimpse()
+
+# wrangle
+credit$credit_utilization_perc <- credit$balance / credit$limit * 100 # Source: zx8754 2016 (StackOverflow)
+
+credit |>
+  view()
+
+# plot
+credit |>
+  ggplot(aes(x = income, 
+             y = credit_utilization_perc, 
+             color = student, 
+             shape = student)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_grid(student ~ married) +
+  labs(
+    x = "Income",
+    y = "Credit utilization"
+  ) +
+  scale_y_continuous(labels = label_dollar(prefix = "", suffix = "%")) +
+  scale_x_continuous(labels = label_dollar(suffix = "K")) +
+  theme_minimal() +
+  theme(legend.position= "none", 
+        panel.border = element_rect(color = "black", fill = NA, size = 0.05),
+        strip.background = element_rect(color = "black", fill = "lightgray", size = 1))
+
+```
+
+```{r q4_part-d}
+
+# run OLS model
+model <- lm(credit_utilization_perc ~ income + student + married, data = credit)
+summary(model) # Source: Thieme 2021 (Towards Data Science)
+```
+
+When examining credit card utilization instead of credit balance, student and marital status seem to have a much stronger impact on the relationship between income and utilization. Most interesting, students' credit utilization decreases as income increases. When examining marital status, single people are more likely to demonstrate more extreme changes to utilization as income increases (both positively and negatively, depending on student status), while married people are more constant in their utilization by income.
 
 ## 5 - Napoleon’s march.
