@@ -23,7 +23,8 @@ pacman::p_load(tidyverse,
                palmerpenguins,
                openintro,
                ggrepel,
-               patchwork)
+               patchwork,
+               quantreg)
 
 devtools::install_github("tidyverse/dsbox")
 
@@ -96,7 +97,7 @@ nyc_marathon |>
 
 # histogram
 nyc_marathon |>
-  ggplot(aes(x = time_hrs)) +
+  ggplot(aes(x = time)) +
   geom_histogram(fill = "deepskyblue3", bins = 15) +
   labs(
     x = "Completion time (hours)",
@@ -108,7 +109,7 @@ nyc_marathon |>
 
 # box plot
 nyc_marathon |>
-  ggplot(aes(x = time_hrs)) +
+  ggplot(aes(x = time)) +
   geom_boxplot() +
   labs(
     x = "Completion time (hours)",
@@ -123,7 +124,7 @@ nyc_marathon |>
   )
 ```
 
-The histogram above does a great job of illustrating the bimodal nature of this distribution, with two centers at around 2.1 and 2.4 hours for completion—information which is lost in the box plot. For me, histograms allow for easier interpretation of density, as well. Contrastingly, the box plot does a better job of showing us the outliers in the dataset, which are hard to distinguish in the histogram. Additionally, due to the two peaks, visually estimating central tendency in the histogram is difficult, which is facilitated much better in the box plot due to the obvious delineation of the median.
+The histogram above does a great job of illustrating the bimodal nature of this distribution, with two centers at around 2:10 and 2:25 hours for completion—information which is lost in the box plot. For me, histograms allow for easier interpretation of density, as well. Contrastingly, the box plot does a better job of showing us the outliers in the dataset, which are hard to distinguish in the histogram. Additionally, due to the two peaks, visually estimating central tendency in the histogram is difficult, which is facilitated much better in the box plot due to the obvious delineation of the median.
 
 ```{r question-2-part-b-code}
 
@@ -133,7 +134,7 @@ nyc_marathon |>
 
 # plot
 nyc_marathon |>
-  ggplot(aes(x = time_hrs, fill = division)) +
+  ggplot(aes(x = time, fill = division)) +
   geom_boxplot() +
   facet_wrap(~ division, ncol = 1) + # Source: Andrie 2012 (Stack Overflow)
   labs(
@@ -143,7 +144,7 @@ nyc_marathon |>
     caption = "Source: OpenIntro",
     fill = "Division"
   ) +
-  scale_fill_manual(values = c("brown1","deepskyblue3")) +
+  scale_fill_manual(values = c("chartreuse4","deepskyblue3")) +
   theme(
     axis.title.y = element_blank(),
     axis.text.y = element_blank(),
@@ -152,16 +153,167 @@ nyc_marathon |>
   guides(fill = "none") # Source: Andrew 2021 (StackOverflow)
 ```
 
-The distribution of the quartiles (excluding outliers) of mens' and womens' NYC Marathon times are remarkably similar, with the obvious difference of female winners' times centered around 2.4 whereas male winners' are centered around approx. 2.1. The major difference between the two box plots is the outliers, with the womens' distribution having more and a larger spread of outliers than the mens' (skewing the distribution right).
+The distribution of the quartiles (excluding outliers) of mens' and womens' NYC Marathon times are remarkably similar, with the obvious difference of female winners' times centered around 2:25 whereas male winners' are centered around approx. 2:10. The major difference between the two box plots is the outliers, with the womens' distribution having more and a larger spread of outliers than the mens' (skewing the distribution right).
 
-```{r question-2-part-c-code}
+```{r question-2-part-c}
 
 # plot
+nyc_marathon |>
+  ggplot(aes(x = time, fill = division)) +
+  geom_boxplot() +
+  labs(
+    x = "Completion time (hours)",
+    title = "Distribution of NYC Marathon winners completion times",
+    subtitle = "From 1970 to 2020 by division",
+    caption = "Source: OpenIntro",
+    fill = "Division"
+  ) +
+  scale_fill_manual(values = c("chartreuse4","deepskyblue3")) +
+  theme(
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(), # Source: Tidyverse
+  ) 
 
 ```
 
+The main source of redundancy I found in Plot 2B was the two separate plots induced by the faceting by division, which I addressed here by moving the distribution of both divisions onto one plot. I do not see any other forms of redundancy to eliminate from the above plot.
+
+```{r q2-part_d}
+
+# glimpse
+nyc_marathon |>
+  glimpse()
+
+nyc_marathon |>
+  view()
+
+# plot
+nyc_marathon |>
+  ggplot(aes(x = year, y = time, color = division, shape = division)) +
+  geom_point() +
+  geom_line(size = 1) +
+  labs(
+    x = "Year",
+    y = "Completion time (hours)",
+    color = "Division",
+    title = "NYC Marathon winners' completion times",
+    subtitle = "Over time",
+    caption = "Source: OpenIntro"
+  ) +
+  scale_color_manual(values = c("chartreuse4","deepskyblue3"))+
+  guides(color = guide_legend("Division"),
+       shape = guide_legend("Division")) # Source: Gazzelloni 2024 (StackOverflow)
+```
+
+This plot reveals interesting time-series information previously unseen in distributions that did not incorporating a time variable. More specifically, the sharp decrease in winners' marathon times regardless of gender is seen in the late 1970s, with womens' times decreasing much more than mens' times. There exists expected fluctuation in times between 1980 and 2010, before a gap is seen in 2012 due to the race cancellation due to Hurricane Sandy. There is also a gap in the 1970 womens' winner's time as there were no female finishers that year. Both of these gaps are not illustrated in previous plots. Finally, there is an interesting increase in winning times in 2020, which represents the virtual format adopted due to the COVID-19 pandemic.
+
 ## 3 - US counties
 
+```{r q3-part_a}
+
+# glimpse data
+county |>
+  glimpse()
+
+# analyze code
+ggplot(county) +
+  geom_point(aes(x = median_edu, y = median_hh_income)) +
+  geom_boxplot(aes(x = smoking_ban, y = pop2017))
+```
+
+This code creates the above plot: a dotplot of median education on median household income and a superimposed boxplot of 2017 population by status of smoking ban. While the code itself does work without causing an error, it does not make sense. Firstly, it does not create a visually appealing plot nor one that is easy to interpret given the lack of labels, scaling, and color. Additionally, the main reason this code does not make sense is because it is attempting to plot two different variables on each axis. On the x-axis this code is trying to plot median education and presence of a smoking ban simultaneously and on the y-axis, median household income and 2017 population are being plotted.
+
+```{r q3-part_b}
+
+# preferred plot:
+ggplot(county %>% filter(!is.na(median_edu))) + 
+  geom_point(aes(x = homeownership, y = poverty)) + 
+  facet_grid(. ~ median_edu)
+```
+
+I am personally able to interpret this plot better than the first plot shown in the HW instructions because it allows more space/scale for the independent and dependent variables by allocating a full scale to poverty instead of homeownership. This allows the viewer to parse out a greater degree of nuance in difference in poverty by homeownership and education status. However, I would say that time-series data would make more sense to be faceted into rows as the time scale is most important and the viewer wants to be able to make comparisons by time instead of the dependent variables.
+
+```{r q3-part_d}
+
+# glimpse data
+county |>
+  glimpse()
+
+# plot a
+county |>
+  ggplot(aes(x = homeownership, y = poverty)) +
+  geom_point() +
+  labs(
+    title = "Plot A"
+  )
+
+# plot b
+county |>
+  ggplot(aes(x = homeownership, y = poverty)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE) +
+  labs(
+    title = "Plot B"
+  )
+
+# plot c
+county |>
+  ggplot(aes(x = homeownership, y = poverty)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "green") + # NOTE: I could not figure out which smoothing/regression model was utilized in the original plot and I tried all the method options (and other function options), so I used OLS as a replacement.
+  geom_smooth(method = "loess", se = FALSE, color = "green") +
+  labs(
+    title = "Plot C"
+  )
+
+# plot d
+county |>
+  ggplot(aes(x = homeownership, y = poverty)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  geom_smooth(method = "loess", se = FALSE) +
+  geom_point() +
+  labs(
+    title = "Plot D"
+  )
+
+# plot e
+county |>
+  ggplot(aes(x = homeownership, y = poverty)) +
+  geom_point(aes(color = metro)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  geom_smooth(method = "loess", se = FALSE, linetype = "dashed") +
+  labs(
+    title = "Plot E"
+  )
+```
+
 ## 4 - Rental apartments in SF
+
+```{r q4-part_a}
+
+# load in the data
+credit <- read_csv("data/credit.csv")
+
+# glimpse the data
+credit |>
+  glimpse()
+
+# plot
+credit |>
+  ggplot(aes(x = income, y = balance, color = student, shape = student)) +
+  geom_point() +
+  facet_grid(rows = vars(student), cols = vars(married), labeller(label_parsed())) +
+  labs(
+    x = "Income",
+    y = "Credit card balance"
+  ) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_y_continuous(labels = label_dollar()) +
+  scale_x_continuous(labels = label_dollar(suffix = "K")) +
+  theme(legend.position= "none") # Source: Andrew 2021 (StackOverflow)
+
+
+```
 
 ## 5 - Napoleon’s march.
