@@ -1,6 +1,7 @@
 ---
 title: "HW 01"
-author: "INSERT YOUR NAME HERE"
+author: "Nathaniel Cross"
+date: 2025-05-29
 format: 
   html:
     embed-resources: true
@@ -10,24 +11,152 @@ toc: true
 ## 0 - Setup
 
 ```{r setup}
-if (!require("pacman")) 
+if(!require(pacman))
   install.packages("pacman")
 
-# use this line for installing/loading
-# pacman::p_load() 
+pacman::p_load(tidyverse, 
+               glue,
+               scales,
+               countdown,
+               ggthemes,
+               gt,
+               palmerpenguins,
+               openintro,
+               ggrepel,
+               patchwork)
 
 devtools::install_github("tidyverse/dsbox")
+
+# set theme for ggplot2
+ggplot2::theme_set(ggplot2::theme_minimal(base_size = 14))
+
+# set width of code output
+options(width = 65)
+
+# set figure parameters for knitr
+knitr::opts_chunk$set(
+  fig.width = 7,        # 7" width
+  fig.asp = 0.618,      # the golden ratio
+  fig.retina = 3,       # dpi multiplier for displaying HTML output on retina
+  fig.align = "center", # center align figures
+  dpi = 300             # higher dpi, sharper image
+)
 ```
 
 ## 1 - Road traffic accidents in Edinburgh
 
-```{r label-me-1}
+```{r question-1-code}
 
+# load in the data
+accidents <- read_csv("data/accidents.csv")
+
+# glimpse the data
+accidents |>
+  glimpse()
+
+# data wrangle
+accidents_wrangle <- accidents |>
+  mutate(
+      day_type = case_when(
+        day_of_week %in% c("Saturday", "Sunday") ~ "Weekend",
+        TRUE                                     ~ "Weekday"
+      )
+  )
+
+accidents_wrangle |>
+  glimpse()
+
+# create the plot
+accidents_wrangle |>
+  ggplot(aes(x = time)) +
+  geom_density(aes(fill= severity), alpha = 0.5) +
+  facet_wrap(~ day_type, ncol = 1) + # Source: Andrie 2012 (Stack Overflow)
+  scale_fill_manual(values = c("#aa93b0","#9ecac8", "#fef39f")) +
+  labs(
+    x = "Time of day",
+    y = "Density",
+    fill = "Severity",
+    title = "Number of accidents throughout the day",
+    subtitle = "By day of week and severity"
+  )
 ```
+
+This plot reveals interesting trends about the distribution of accidents in Edinburgh. On weekdays, there is a visible bimodal quality to the distribution of slight accidents (replicated to a degree when examining the distribution of all accident types), centered around regular commuting times (i.e. 09:00 and 17:00). I find it intriguing that on weekdays, fatal accidents peak midday instead of in the evenings. Even more intriging is the lack of fatal accidents on weekend nights, which surprises me as I would have thought that tjere would be more drunk/intoxicated drivers on weekend nights who then would cause more serious accidents. Weekend night accidents are more unimodal, with a single peak around 16:00 or 17:00, and both distributions of slight and serious accidents mirror each other similarly.
 
 ## 2 - NYC marathon winners
 
-```{r label-me-2}
+```{r question-2-part-a-code}
+
+# load in the data
+nyc_marathon <- read_csv("data/nyc_marathon.csv")
+
+# glimpse the data
+nyc_marathon |>
+  glimpse()
+
+# histogram
+nyc_marathon |>
+  ggplot(aes(x = time_hrs)) +
+  geom_histogram(fill = "deepskyblue3", bins = 15) +
+  labs(
+    x = "Completion time (hours)",
+    y = "Frequency",
+    title = "Distribution of NYC Marathon winners completion times",
+    subtitle = "From 1970 to 2020",
+    caption = "Source: OpenIntro"
+  )
+
+# box plot
+nyc_marathon |>
+  ggplot(aes(x = time_hrs)) +
+  geom_boxplot() +
+  labs(
+    x = "Completion time (hours)",
+    title = "Distribution of NYC Marathon winners completion times",
+    subtitle = "From 1970 to 2020",
+    caption = "Source: OpenIntro"
+  ) +
+  theme(
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank() # Source: Tidyverse
+  )
+```
+
+The histogram above does a great job of illustrating the bimodal nature of this distribution, with two centers at around 2.1 and 2.4 hours for completion—information which is lost in the box plot. For me, histograms allow for easier interpretation of density, as well. Contrastingly, the box plot does a better job of showing us the outliers in the dataset, which are hard to distinguish in the histogram. Additionally, due to the two peaks, visually estimating central tendency in the histogram is difficult, which is facilitated much better in the box plot due to the obvious delineation of the median.
+
+```{r question-2-part-b-code}
+
+# glimpse data
+nyc_marathon |>
+  glimpse()
+
+# plot
+nyc_marathon |>
+  ggplot(aes(x = time_hrs, fill = division)) +
+  geom_boxplot() +
+  facet_wrap(~ division, ncol = 1) + # Source: Andrie 2012 (Stack Overflow)
+  labs(
+    x = "Completion time (hours)",
+    title = "Distribution of NYC Marathon winners completion times",
+    subtitle = "From 1970 to 2020 by division",
+    caption = "Source: OpenIntro",
+    fill = "Division"
+  ) +
+  scale_fill_manual(values = c("brown1","deepskyblue3")) +
+  theme(
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(), # Source: Tidyverse
+  ) +
+  guides(fill = "none") # Source: Andrew 2021 (StackOverflow)
+```
+
+The distribution of the quartiles (excluding outliers) of mens' and womens' NYC Marathon times are remarkably similar, with the obvious difference of female winners' times centered around 2.4 whereas male winners' are centered around approx. 2.1. The major difference between the two box plots is the outliers, with the womens' distribution having more and a larger spread of outliers than the mens' (skewing the distribution right).
+
+```{r question-2-part-c-code}
+
+# plot
 
 ```
 
