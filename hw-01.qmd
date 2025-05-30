@@ -1,14 +1,19 @@
 ---
 title: "HW 01"
+subtitle: "INFO 526: Summer 2025"
 author: "Nathaniel Cross"
 date: 2025-05-29
 format: 
   html:
     embed-resources: true
 toc: true
+execute:
+  warning: false
+  message: false
+  error: false
 ---
 
-## 0 - Setup: SUPPRESS WARNINGS!!
+## 0 - Setup
 
 ```{r setup}
 if(!require(pacman))
@@ -425,26 +430,290 @@ temps  <- napoleon$temperatures
 troops |>
   glimpse()
 
-windowsFonts()
-font_import()
-loadfonts(device = "win")
+# wrangle
+troops_wrangle <- troops |>
+  mutate(
+  direction = fct_relevel(direction, "retreating", "advancing")
+)
 
-# plot
-
-cities |>
-ggplot(aes(x = long, y = lat)) + 
+# plot the march
+march_plot <- ggplot(cities, aes(x = long, y = lat)) +
   geom_path(
-    aes(size = survivors, colour = direction, group = group), 
-    data = troops
+    aes(size = survivors, 
+        colour = direction, 
+        group = group), 
+    data = troops_wrangle,
+    lineend = "round"
   ) + 
+    geom_text(
+      aes(label = survivors), 
+      hjust = 1.5, 
+      vjust = 0, 
+      size = 2, 
+      data = troops_wrangle
+    ) +
   geom_point() + 
-  geom_text(aes(label = city), hjust=1, vjust=1, size=3) + 
-  scale_colour_manual(values = c("bisque2","black")) +
+  geom_text(
+    aes(label = city), 
+    hjust=1, 
+    vjust=1, 
+    size=3) + 
+  scale_colour_manual(values = c("black","bisque2")) +
   scale_x_continuous(limits = c(24, 39)) +
-  theme_void()+
-  theme(panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(),
-        text = element_text(size = 10),
-        legend.position= "none") 
+  labs(
+    x = NULL,
+    y = NULL,
+    title = "Map representing the losses over time of French army troops during the Russian campaign, 1812-1813.\nConstructed by Charles Joseph Minard, Inspector General of Public Works retired.",
+    subtitle = "Paris, 20 November 1869"
+  ) +
+  theme(
+    axis.text.x=element_blank(),
+    axis.text.y=element_blank(),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    text = element_text(size = 10),
+    legend.position= "none") +
+  scale_size(range = c(0.5, 10))
 
+# wrangle temp data
+temps_wrangle <- temps |>
+  mutate(temp_day = glue("{temp}°C   {month}-{day}"))
+         
+temps_wrangle |>
+  view()
+
+# plot the temperatures
+temp_plot <- ggplot(data = temps_wrangle, aes(x = long, y = temp)) +
+  geom_line() +
+  geom_text(
+    aes(label = temp_day), 
+    hjust = 1,
+    vjust = 1.5) +
+  labs(
+    x = NULL,
+    y = NULL,
+    title = "Temperature chart (degrees Celsius)"
+  ) +
+  theme(
+    axis.text.x=element_blank(),
+    panel.grid.major.x = element_blank(), 
+    panel.grid.minor.x = element_blank(),
+    text = element_text(size = 10),
+    legend.position= "none")
+
+# combining both plots
+plot.both <- rbind(ggplotGrob(march_plot),
+                   ggplotGrob(temp_plot))
+
+grid::grid.newpage()
+grid::grid.draw(plot.both)
 ```
+
+Description of code functionality (please see the below code chunk for line-by-line annotations of what each command/function performs as well as plain text annotations following the chunk).
+
+Sources:
+
+-   [R color cheatsheet](https://www.nceas.ucsb.edu/sites/default/files/2020-04/colorPaletteCheatsheet.pdf): used to identify closest colors to those in the original plot.
+
+-   [Re-Visions of Minard](https://www.datavis.ca/gallery/re-minard.php): used to source the `geom_pat h()` code, the English translation of the title and subtitle, and for the reference plot.
+
+-   [Remove grid and background from plot using ggplot2 in R](https://www.geeksforgeeks.org/remove-grid-and-background-from-plot-using-ggplot2-in-r/): used for the code to remove grid lines.
+
+-   [Remove all of x axis labels in ggplot \[duplicate\]](https://stackoverflow.com/questions/35090883/remove-all-of-x-axis-labels-in-ggplot): used for the removal of numerical x and y labels.
+
+-   [Exploring Minard’s 1812 plot with ggplot2](https://www.andrewheiss.com/blog/2017/08/10/exploring-minards-1812-plot-with-ggplot2/): used for the code to join the two plots as one.
+
+```{r q5-annotated}
+
+# plot the march
+march_plot <- ggplot(cities, aes(x = long, y = lat)) + # Establishes march_plot as an object that contains a ggplot. The ggplot is established using the cities dataframe, with longitude and latitude as the x and y variables.
+  geom_path(
+    aes(size = survivors, 
+        colour = direction, 
+        group = group), 
+    data = troops_wrangle,
+    lineend = "round" # Creates the first layer, a path that uses the troops dataframe and follows the direction of attack/retreat. Its thickness is established by the size function. The group function also determines attack versus retreat, however for the purpose of color differentiation. The lineend function smooths the gaps between the paths by making the paths rounded instead of rectangular. This is an aesthetic change I made myself to improve readability.
+  ) + 
+    geom_text(
+      aes(label = survivors), 
+      hjust = 1.5, 
+      vjust = 0, 
+      size = 2, 
+      data = troops_wrangle # This is the second layer, a text layer which labels the survivor count at points along the path layer, as denoted by the label = survivors. The subsequent adjustments are used to separate the label from the path itself by just a few pixels, and the size controls the font size of the labels (these are changes I made myself to increase aesethetics of the plot). The dataframe used here changes from the ggplot data, cities, which is why the data function is used here.
+    ) +
+  geom_point() + # Creates points at each of the cities
+  geom_text(
+    aes(label = city), 
+    hjust=1, 
+    vjust=1, 
+    size=3 # Creates labels for the cities at each of the points created in the above layer. Again, city labels are shifted for visibility and the size is shrunk to maintain proportionality (self-made changes).
+  ) + 
+  scale_colour_manual(values = c("black","bisque2")) + # Manually changes the colors of the paths. I made these changes personally.
+  scale_x_continuous(limits = c(24, 39)) + # Sets the limits of the x-axis scale from 24 to 39, thereby stretching out the path horizontally to better match the original.
+  labs(
+    x = NULL,
+    y = NULL,
+    title = "Map representing the losses over time of French army troops during the Russian campaign, 1812-1813.\nConstructed by Charles Joseph Minard, Inspector General of Public Works retired.",
+    subtitle = "Paris, 20 November 1869" # Sets all the labels in the plot, including nullifying the x and y axis labels which are not present in the original and adding the title and subtitle. I set these labels personally.
+  ) +
+  theme(
+    axis.text.x=element_blank(),
+    axis.text.y=element_blank(),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    text = element_text(size = 10),
+    legend.position= "none") + # Changes thematic elements. The first four functions eliminate labels and grid lines from the plot for a cleaner background. The fifth changes the font size of all text on the figure, and the last eliminates the legend.
+  scale_size(range = c(0.5, 10)) # Increases the scaling of the path so that each path is not disconnected.
+
+# plot the temperatures
+temp_plot <- ggplot(data = temps_wrangle, aes(x = long, y = temp)) + # Creates a different object for this separate figure, establishes the ggplot background layer which is utilizing the temps dataframe with longitude on the x-axis and temperature on the y-axis.
+  geom_line() + # Creates the line layer showing change in temperature over longitude.
+  geom_text(
+    aes(label = temp_day), 
+    hjust = 1,
+    vjust = 1.5) + # Adds a text layer to label the temperatures and dates on the graph. The temp_day is a wrangled/mutated column gluing temperature to date observations. Again, these labels are shifted off the line itself and decided by myself.
+  labs(
+    x = NULL,
+    y = NULL,
+    title = "Temperature chart (degrees Celsius)" # Eliminates x and y axis labels and sets the title of the plot. Labels set by myself.
+  ) +
+  theme(
+    axis.text.x=element_blank(),
+    panel.grid.major.x = element_blank(), 
+    panel.grid.minor.x = element_blank(),
+    text = element_text(size = 10),
+    legend.position= "none") # Sets thematic elements, in order: eliminates x axis labels, eliminates x axis major grid lines, eliminates x axis minor grid lines, sets font size for the entire plot, and eliminates the legend.
+
+# combining both plots
+plot.both <- rbind(ggplotGrob(march_plot),
+                   ggplotGrob(temp_plot)) # Creates a new object binding the two afore-created plots together.
+
+grid::grid.newpage() # Creates a new grid on which the binded plots can be drawn.
+# grid::grid.draw(plot.both) # Draws the binded plots onto the grid (command suppressed to not create the actual plot in this code chunk in the final Quarto submission.)
+```
+
+Annotations as plain text if more legible:
+
+\# plot the march
+
+march_plot \<- ggplot(cities, aes(x = long, y = lat)) + \# Establishes march_plot as an object that contains a ggplot. The ggplot is established using the cities dataframe, with longitude and latitude as the x and y variables.
+
+geom_path(
+
+aes(size = survivors,
+
+colour = direction,
+
+group = group),
+
+data = troops_wrangle,
+
+lineend = "round" \# Creates the first layer, a path that uses the troops dataframe and follows the direction of attack/retreat. Its thickness is established by the size function. The group function also determines attack versus retreat, however for the purpose of color differentiation. The lineend function smooths the gaps between the paths by making the paths rounded instead of rectangular. This is an aesthetic change I made myself to improve readability.
+
+) +
+
+geom_text(
+
+aes(label = survivors),
+
+hjust = 1.5,
+
+vjust = 0,
+
+size = 2,
+
+data = troops_wrangle \# This is the second layer, a text layer which labels the survivor count at points along the path layer, as denoted by the label = survivors. The subsequent adjustments are used to separate the label from the path itself by just a few pixels, and the size controls the font size of the labels (these are changes I made myself to increase aesethetics of the plot). The dataframe used here changes from the ggplot data, cities, which is why the data function is used here.
+
+) +
+
+geom_point() + \# Creates points at each of the cities
+
+geom_text(
+
+aes(label = city),
+
+hjust=1,
+
+vjust=1,
+
+size=3 \# Creates labels for the cities at each of the points created in the above layer. Again, city labels are shifted for visibility and the size is shrunk to maintain proportionality (self-made changes).
+
+) +
+
+scale_colour_manual(values = c("black","bisque2")) + \# Manually changes the colors of the paths. I made these changes personally.
+
+scale_x_continuous(limits = c(24, 39)) + \# Sets the limits of the x-axis scale from 24 to 39, thereby stretching out the path horizontally to better match the original.
+
+labs(
+
+x = NULL,
+
+y = NULL,
+
+title = "Map representing the losses over time of French army troops during the Russian campaign, 1812-1813.\\nConstructed by Charles Joseph Minard, Inspector General of Public Works retired.",
+
+subtitle = "Paris, 20 November 1869" \# Sets all the labels in the plot, including nullifying the x and y axis labels which are not present in the original and adding the title and subtitle. I set these labels personally.
+
+) +
+
+theme(
+
+axis.text.x=element_blank(),
+
+axis.text.y=element_blank(),
+
+panel.grid.major = element_blank(),
+
+panel.grid.minor = element_blank(),
+
+text = element_text(size = 10),
+
+legend.position= "none") + \# Changes thematic elements. The first four functions eliminate labels and grid lines from the plot for a cleaner background. The fifth changes the font size of all text on the figure, and the last eliminates the legend.
+
+scale_size(range = c(0.5, 10)) \# Increases the scaling of the path so that each path is not disconnected.
+
+\# plot the temperatures
+
+temp_plot \<- ggplot(data = temps_wrangle, aes(x = long, y = temp)) + \# Creates a different object for this separate figure, establishes the ggplot background layer which is utilizing the temps dataframe with longitude on the x-axis and temperature on the y-axis.
+
+geom_line() + \# Creates the line layer showing change in temperature over longitude.
+
+geom_text(
+
+aes(label = temp_day),
+
+hjust = 1,
+
+vjust = 1.5) + \# Adds a text layer to label the temperatures and dates on the graph. The temp_day is a wrangled/mutated column gluing temperature to date observations. Again, these labels are shifted off the line itself and decided by myself.
+
+labs(
+
+x = NULL,
+
+y = NULL,
+
+title = "Temperature chart (degrees Celsius)" \# Eliminates x and y axis labels and sets the title of the plot. Labels set by myself.
+
+) +
+
+theme(
+
+axis.text.x=element_blank(),
+
+panel.grid.major.x = element_blank(),
+
+panel.grid.minor.x = element_blank(),
+
+text = element_text(size = 10),
+
+legend.position= "none") \# Sets thematic elements, in order: eliminates x axis labels, eliminates x axis major grid lines, eliminates x axis minor grid lines, sets font size for the entire plot, and eliminates the legend.
+
+\# combining both plots
+
+plot.both \<- rbind(ggplotGrob(march_plot),
+
+ggplotGrob(temp_plot)) \# Creates a new object binding the two afore-created plots together.
+
+grid::grid.newpage() \# Creates a new grid on which the binded plots can be drawn.
+
+\# grid::grid.draw(plot.both) \# Draws the binded plots onto the grid (command suppressed to not create the actual plot in this code chunk in the final Quarto submission.)
