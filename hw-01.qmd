@@ -259,32 +259,59 @@ county |>
 
 # plot c
 county |>
-  ggplot(aes(x = homeownership, y = poverty)) +
-  geom_point() +
-  geom_smooth(method = "lm", se = FALSE, color = "green") + # NOTE: I could not figure out which smoothing/regression model was utilized in the original plot and I tried all the method options (and other function options), so I used OLS as a replacement.
-  geom_smooth(method = "loess", se = FALSE, color = "green") +
+  ggplot(aes(x = homeownership, y = poverty, color = metro)) +
+  geom_point(color = "black") +
+  geom_smooth(method = "loess", se = FALSE, na.rm = FALSE, show.legend = FALSE) +
   labs(
     title = "Plot C"
-  )
+  ) +
+  scale_color_manual(values = c("yes" = "green", "no" = "green")) +
+  guides(fill = "none")
 
 # plot d
 county |>
-  ggplot(aes(x = homeownership, y = poverty)) +
-  geom_smooth(method = "lm", se = FALSE) +
-  geom_smooth(method = "loess", se = FALSE) +
-  geom_point() +
+  ggplot(aes(x = homeownership, y = poverty, color = metro)) +
+  geom_smooth(method = "loess", se = FALSE, na.rm = FALSE, show.legend = FALSE) +
+  geom_point(color = "black") +
   labs(
     title = "Plot D"
-  )
+  ) +
+  scale_color_manual(values = c("yes" = "blue", "no" = "blue")) +
+  guides(fill = "none")
 
 # plot e
 county |>
   ggplot(aes(x = homeownership, y = poverty)) +
   geom_point(aes(color = metro)) +
-  geom_smooth(method = "lm", se = FALSE) +
-  geom_smooth(method = "loess", se = FALSE, linetype = "dashed") +
+  geom_smooth(method = "loess", se = FALSE, na.rm = FALSE, aes(linetype = metro)) +
   labs(
     title = "Plot E"
+  ) 
+
+# plot f
+county |>
+  ggplot(aes(x = homeownership, y = poverty, color = metro)) +
+  geom_point(aes(color = metro)) +
+  geom_smooth(method = "loess", se = FALSE, na.rm = FALSE) +
+  labs(
+    title = "Plot F"
+  ) 
+
+# plot g
+county |>
+  ggplot(aes(x = homeownership, y = poverty)) +
+  geom_point(aes(color = metro)) +
+  geom_smooth(method = "loess", se = FALSE) +
+  labs(
+    title = "Plot G"
+  )
+
+# plot h
+county |>
+  ggplot(aes(x = homeownership, y = poverty)) +
+  geom_point(aes(color = metro)) +
+  labs(
+    title = "Plot H"
   )
 ```
 
